@@ -33,6 +33,14 @@ pycodestyle = ">=2.9.1"
 toml = "*"
 
 [[package]]
+name = "bitstruct"
+version = "8.15.1"
+description = "This module performs conversions between Python values and C bit field structs represented as Python byte strings."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
@@ -160,6 +168,14 @@ python-versions = ">=3.6.8"
 diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
+name = "pyroot"
+version = "0.3.0"
+description = "The purpose of this Python library is to provide implementations of advanced bracketed root-finding methods for single-variable functions."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "pytest"
 version = "5.4.3"
 description = "pytest: simple powerful testing with Python"
@@ -252,12 +268,13 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "f99f7c571bd561b4e2c0d021acdbadbe5cf9b0d4fc6a2703dce0a4c5d4943b01"
+content-hash = "9531298656fe67b1c48d2d14b67668e2ee25294eb8674cfba6f1a4ab254b030b"
 
 [metadata.files]
 atomicwrites = []
 attrs = []
 autopep8 = []
+bitstruct = []
 click = []
 colorama = []
 commonmark = []
@@ -271,6 +288,7 @@ pycodestyle = []
 pyflakes = []
 pygments = []
 pyparsing = []
+pyroot = []
 pytest = []
 rich = []
 shellingham = []
