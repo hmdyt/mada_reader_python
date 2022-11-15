@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from dataclasses import dataclass, field
 import struct
 import bitstruct
@@ -64,14 +64,18 @@ class FlushADC:
 def parse_flush_adc(
     event: bytes,
     flush_adc_clock_depth: int = 1024
-) -> Tuple[FlushADC, bytes]:
+) -> Optional[Tuple[FlushADC, bytes]]:
     flush_adc = FlushADC()
     event_reading_bytes = 2 * 4 * flush_adc_clock_depth
 
-    fadc_unpacked = bitstruct.unpack(
-        "u4u2u10"*4*flush_adc_clock_depth,
-        event[0:event_reading_bytes]
-    )
+    try:
+        fadc_unpacked = bitstruct.unpack(
+            "u4u2u10"*4*flush_adc_clock_depth,
+            event[0:event_reading_bytes]
+        )
+    except bitstruct.Error as e:
+        print(e)
+        return None
 
     for i_iter in range(0, len(fadc_unpacked), 3):
         channel_id = fadc_unpacked[i_iter]
@@ -102,6 +106,10 @@ def parse_events(bytes_list: List[bytes]) -> List[Event]:
     events: List[Event] = []
     for b in bytes_list:
         header, remain_b = parse_header(b)
-        fadc, remain_b = parse_flush_adc(remain_b)
-        events.append(Event(header, fadc))
+
+        ret_parse_flush_adc = parse_flush_adc(remain_b)
+        if ret_parse_flush_adc:
+            fadc, remain_b = ret_parse_flush_adc
+            events.append(Event(header, fadc))
+
     return events
