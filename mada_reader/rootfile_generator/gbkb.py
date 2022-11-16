@@ -1,12 +1,13 @@
+from copy import copy
 from pathlib import Path
 from typing import List, Optional
-from nptyping import NDArray, Shape, Float
-from copy import copy
 
-import ROOT as r
 import numpy as np
+import ROOT as r
+from nptyping import NDArray
+
+from mada_reader.parser import Event, FlushADC, parse_from_mada_file
 from mada_reader.pyroot_lib.util import pyroot_func
-from mada_reader.parser import Event, parse_from_mada_file, FlushADC
 
 
 def draw_waveform_hist2d(events: List[Event]) -> List[r.TH2D]:
@@ -82,5 +83,5 @@ def get_fadc_peak2peak_from_mada_file(target_mada_path: Path) -> NDArray:
     events = parse_from_mada_file(target_mada_path)
     fadc_list = list(map(lambda e: e.fadc, events))
     ret = list(map(calc_fadc_peak2peak, fadc_list))
-    ret = filter(lambda x: x != None, ret)
-    return np.array(list(ret))
+    ret = list(filter(lambda x: x != None, ret))
+    return np.array(ret)

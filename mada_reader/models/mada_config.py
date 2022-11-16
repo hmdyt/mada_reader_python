@@ -1,6 +1,7 @@
 import json
-from typing import Literal, List
 from pathlib import Path
+from typing import List, Literal
+
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 

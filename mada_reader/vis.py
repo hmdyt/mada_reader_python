@@ -1,6 +1,7 @@
 import ROOT as r
-from mada_reader.pyroot_lib import util
+
 from mada_reader.parser import FlushADC
+from mada_reader.pyroot_lib import util
 
 
 @util.pyroot_func

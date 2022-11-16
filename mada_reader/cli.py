@@ -2,15 +2,15 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import numpy as np
 import typer
+from rich.console import Console
 from rich.progress import track
 from rich.table import Table
-from rich.console import Console
-import numpy as np
 
 from mada_reader.files import scan_mada_files_from_path
 from mada_reader.models.mada_config import get_mada_config
-from mada_reader.parser import parse_headers, read_file, parse_events
+from mada_reader.parser import parse_events, parse_headers, read_file
 from mada_reader.rootfile_generator import gbkb
 from mada_reader.vis import vis_flush_adc
 
@@ -68,6 +68,7 @@ def detect_peak_to_peak(
     config_file: Path = Path("MADA_config.json"),
     period_ini: int = 0,
     period_fin: int = 0,
+    pretty: bool = True
 ):
     """
     [gain測定用]
@@ -83,7 +84,7 @@ def detect_peak_to_peak(
     results: Dict[str, Tuple[float, float, float, float]] = \
         {board_name: (0, 0, 0, 0) for board_name in mada_config.available_boards}  # GBKB-XX: (sum, count)
 
-    for board_name, mada_file_list in track(mada_files_group_by_name.items(), description="Processing..."):
+    for board_name, mada_file_list in track(mada_files_group_by_name.items(), description="Processing...", transient=True):
         concatenating_arrays = [
             gbkb.get_fadc_peak2peak_from_mada_file(mada_file)
             for mada_file in mada_file_list
@@ -92,17 +93,23 @@ def detect_peak_to_peak(
         fadc_p2p_list = np.concatenate(concatenating_arrays)
         results[board_name] = tuple(np.average(fadc_p2p_list, axis=0))
 
-    table = Table(title="p2p average summary")
-    console = Console()
-    table.add_column("Board Name")
-    table.add_column("ch0", justify="right")
-    table.add_column("ch1", justify="right")
-    table.add_column("ch2", justify="right")
-    table.add_column("ch3", justify="right")
-    for board_name, fadc_p2p_averages in results.items():
-        ch0, ch1, ch2, ch3 = map(lambda x: str(int(x)), fadc_p2p_averages)
-        table.add_row(board_name, ch0, ch1, ch2, ch3)
-    console.print(table)
+    if pretty:
+        table = Table(title="p2p average summary")
+        console = Console()
+        table.add_column("Board Name")
+        table.add_column("ch0", justify="right")
+        table.add_column("ch1", justify="right")
+        table.add_column("ch2", justify="right")
+        table.add_column("ch3", justify="right")
+        for board_name, fadc_p2p_averages in results.items():
+            ch0, ch1, ch2, ch3 = map(lambda x: str(int(x)), fadc_p2p_averages)
+            table.add_row(board_name, ch0, ch1, ch2, ch3)
+        console.print(table)
+    else:
+        print("board name, ch0, ch1, ch2, ch3")
+        for board_name, fadc_p2p_averages in results.items():
+            ch0, ch1, ch2, ch3 = map(lambda x: str(int(x)), fadc_p2p_averages)
+            print("{}, {}, {}, {}, {}".format(board_name, ch0, ch1, ch2, ch3))
 
 
 if __name__ == "__main__":

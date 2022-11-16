@@ -1,5 +1,6 @@
-from typing import List
 from pathlib import Path
+from typing import List
+
 from mada_reader.models.mada_config import MadaConfig, get_mada_config
 
 
