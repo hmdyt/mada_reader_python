@@ -1,6 +1,7 @@
-from typing import List
 from pathlib import Path
-from mada_reader.models.mada_config import MadaConfig
+from typing import List
+
+from mada_reader.models.mada_config import MadaConfig, get_mada_config
 
 
 def scan_mada_files(
@@ -27,3 +28,17 @@ def scan_mada_files(
     target_mada_files.sort(key=lambda x: x.name[8:12])
 
     return target_mada_files
+
+
+def scan_mada_files_from_path(
+    dir: Path,
+    mada_config_path: Path,
+    initial_period: int = 0,
+    final_period: int = 0
+) -> List[Path]:
+    return scan_mada_files(
+        dir,
+        get_mada_config(mada_config_path),
+        initial_period,
+        final_period,
+    )

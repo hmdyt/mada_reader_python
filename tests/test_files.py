@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from mada_reader.files import scan_mada_files
 from mada_reader.models.mada_config import parse
 

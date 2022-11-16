@@ -1,4 +1,4 @@
-from mada_reader.models.mada_config import Connection, GigaIwaki, Adalm, parse
+from mada_reader.models.mada_config import Adalm, Connection, GigaIwaki, parse
 
 JSON_STRING = """
     {

@@ -1,6 +1,7 @@
 import json
-from typing import Literal, List
 from pathlib import Path
+from typing import List, Literal
+
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
@@ -89,3 +90,8 @@ def parse(json_string: str) -> MadaConfig:
         ))
 
     return MadaConfig(giga_iwaki_list, adalm_list)
+
+
+def get_mada_config(mada_config_path: Path) -> MadaConfig:
+    with open(mada_config_path, "r") as f:
+        return parse(f.read())
