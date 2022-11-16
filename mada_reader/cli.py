@@ -1,21 +1,26 @@
 import sys
 from pathlib import Path
+from typing import Dict, List, Tuple
 
-from mada_reader.files import scan_mada_files
-from mada_reader.models.mada_config import parse as parse_mada_config
+import typer
+from rich.progress import track
+from rich.table import Table
+from rich.console import Console
+import numpy as np
+
+from mada_reader.files import scan_mada_files_from_path
+from mada_reader.models.mada_config import get_mada_config
 from mada_reader.parser import parse_headers, read_file, parse_events
 from mada_reader.rootfile_generator import gbkb
 from mada_reader.vis import vis_flush_adc
-import typer
-from rich.progress import track
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_show_locals=False)
 
 
 @app.command()
 def show(mada_path: Path):
     """
-    show header
+    show header info
     """
     b = read_file(mada_path)
     events = parse_headers(b)
@@ -26,7 +31,7 @@ def show(mada_path: Path):
 @app.command()
 def fadc(mada_path: str, event_id: int):
     """
-    visuallize FADC waveform
+    visuallize FADC waveform (single event)
     """
     b = read_file(mada_path)
     events = parse_events(b)
@@ -41,11 +46,9 @@ def root(
     period_fin: int = 0,
 ):
     """
-    convert .mada into .root
+    .madaを.rootに (perXXXX以下のmadaを走査する)
     """
-    with open(dir / config_file) as f:
-        mada_config = parse_mada_config(f.read())
-    mada_files = scan_mada_files(dir, mada_config, period_ini, period_fin)
+    mada_files = scan_mada_files_from_path(dir, config_file, period_ini, period_fin)
     for mada_file in track(mada_files, description="Processing..."):
         print(mada_file, file=sys.stderr)
         gbkb.mada_to_root(mada_file)
@@ -54,9 +57,52 @@ def root(
 @app.command()
 def single(path_to_mada: Path):
     """
-    convert .mada to .root (single file)
+    .madaを.rootに (1ファイルのみ)
     """
     gbkb.mada_to_root(path_to_mada)
+
+
+@app.command("detp2p")
+def detect_peak_to_peak(
+    dir: Path = Path("."),
+    config_file: Path = Path("MADA_config.json"),
+    period_ini: int = 0,
+    period_fin: int = 0,
+):
+    """
+    [gain測定用]
+    指定したperの全てのFADCから波形のp-pを算出して, ボードごとに平均する
+    """
+    mada_config = get_mada_config(config_file)
+    mada_files = scan_mada_files_from_path(dir, config_file, period_ini, period_fin)
+    mada_files_group_by_name: Dict[str, List[Path]] = {board_name: [] for board_name in mada_config.available_boards}
+    for mada_file in mada_files:
+        board_name = mada_file.name[:7]
+        mada_files_group_by_name[board_name].append(mada_file)
+
+    results: Dict[str, Tuple[float, float, float, float]] = \
+        {board_name: (0, 0, 0, 0) for board_name in mada_config.available_boards}  # GBKB-XX: (sum, count)
+
+    for board_name, mada_file_list in track(mada_files_group_by_name.items(), description="Processing..."):
+        concatenating_arrays = [
+            gbkb.get_fadc_peak2peak_from_mada_file(mada_file)
+            for mada_file in mada_file_list
+        ]
+        concatenating_arrays = list(filter(lambda x: x.size > 0, concatenating_arrays))
+        fadc_p2p_list = np.concatenate(concatenating_arrays)
+        results[board_name] = tuple(np.average(fadc_p2p_list, axis=0))
+
+    table = Table(title="p2p average summary")
+    console = Console()
+    table.add_column("Board Name")
+    table.add_column("ch0", justify="right")
+    table.add_column("ch1", justify="right")
+    table.add_column("ch2", justify="right")
+    table.add_column("ch3", justify="right")
+    for board_name, fadc_p2p_averages in results.items():
+        ch0, ch1, ch2, ch3 = map(lambda x: str(int(x)), fadc_p2p_averages)
+        table.add_row(board_name, ch0, ch1, ch2, ch3)
+    console.print(table)
 
 
 if __name__ == "__main__":

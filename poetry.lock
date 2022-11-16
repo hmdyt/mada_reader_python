@@ -319,6 +319,25 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "nptyping"
+version = "2.4.0"
+description = "Type hints for NumPy."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = {version = ">=1.20.0,<2.0.0", markers = "python_version >= \"3.8\""}
+typing-extensions = {version = ">=4.0.0,<5.0.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+build = ["invoke (>=1.6.0)", "pip-tools (>=6.5.0)"]
+complete = ["pandas", "pandas-stubs-fork"]
+dev = ["invoke (>=1.6.0)", "pip-tools (>=6.5.0)", "autoflake", "black", "coverage", "codecov (>=2.1.0)", "feedparser", "isort", "mypy", "pylint", "pyright", "setuptools", "typeguard", "wheel", "pandas", "beartype (<0.10.0)", "beartype (>=0.10.0)", "pandas-stubs-fork"]
+pandas = ["pandas", "pandas-stubs-fork"]
+qa = ["autoflake", "black", "coverage", "codecov (>=2.1.0)", "feedparser", "isort", "mypy", "pylint", "pyright", "setuptools", "typeguard", "wheel", "beartype (<0.10.0)", "beartype (>=0.10.0)"]
+
+[[package]]
 name = "numpy"
 version = "1.23.4"
 description = "NumPy is the fundamental package for array computing with Python."
@@ -699,7 +718,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c721a50675dd6694da942406bb3dbc1d4decfd1afb5e5d56602cd1cffd52a4ae"
+content-hash = "becbec6811e4bd26d9fa857412574ed703d0cc656467d98c8d98eb344808c29a"
 
 [metadata.files]
 argcomplete = []
@@ -729,6 +748,7 @@ markupsafe = []
 mccabe = []
 more-itertools = []
 mypy-extensions = []
+nptyping = []
 numpy = []
 openapi-schema-validator = []
 openapi-spec-validator = []
