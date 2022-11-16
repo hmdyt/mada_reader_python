@@ -319,6 +319,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "numpy"
+version = "1.23.4"
+description = "NumPy is the fundamental package for array computing with Python."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "openapi-schema-validator"
 version = "0.1.6"
 description = "OpenAPI schema validation for Python"
@@ -691,7 +699,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "eb6b2162fe17ef7feaa33e5bd4901f6a953713eff823eef59680cc81196b0915"
+content-hash = "c721a50675dd6694da942406bb3dbc1d4decfd1afb5e5d56602cd1cffd52a4ae"
 
 [metadata.files]
 argcomplete = []
@@ -721,6 +729,7 @@ markupsafe = []
 mccabe = []
 more-itertools = []
 mypy-extensions = []
+numpy = []
 openapi-schema-validator = []
 openapi-spec-validator = []
 packaging = []

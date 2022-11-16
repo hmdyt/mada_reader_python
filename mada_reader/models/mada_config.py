@@ -13,7 +13,7 @@ class Connection:
 
 @dataclass(frozen=True)
 class GigaIwaki:
-    id: Literal["00", "01", "03", "10", "11", "13"]
+    id_: Literal["00", "01", "03", "10", "11", "13"]
     is_active: bool
     connection: Connection
     pitch: int
@@ -23,19 +23,19 @@ class GigaIwaki:
 
     @property
     def name(self) -> str:
-        return f"GBKB-{id}"
+        return f"GBKB-{self.id_}"
 
 
 @dataclass(frozen=True)
 class Adalm:
-    id: Literal["0", "1", "2"]
+    id_: Literal["0", "1", "2"]
     is_active: bool
     uri: str
     serial_number: str
     clock_d: str
 
     def name(self) -> str:
-        return f"MADALM_{id}"
+        return f"MADALM_{self.id_}"
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ def parse(json_string: str) -> MadaConfig:
             connection = Connection("cathode", board_attr_connection_position)
 
         giga_iwaki_list.append(GigaIwaki(
-            id=board_name[-2:],
+            id_=board_name[-2:],
             is_active=board_attr["active"],
             pitch=board_attr["pitch"],
             ip_address=board_attr["IP"],
@@ -81,7 +81,7 @@ def parse(json_string: str) -> MadaConfig:
     adalm_list = []
     for adalm_name, adalm_attr in mada_config_dict["ADALM"].items():
         adalm_list.append(Adalm(
-            id=adalm_name[-1],
+            id_=adalm_name[-1],
             is_active=adalm_attr["active"],
             uri=adalm_attr["URI"],
             serial_number=adalm_attr["S/N"],

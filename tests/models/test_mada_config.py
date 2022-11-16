@@ -51,7 +51,7 @@ def test_parse():
     ret = parse(JSON_STRING)
     assert set(ret.giga_iwaki) == set([
         GigaIwaki(
-            id="00",
+            id_="00",
             is_active=True,
             connection=Connection("anode", 0),
             pitch=800,
@@ -60,7 +60,7 @@ def test_parse():
             voltage_threshold_dac=15000
         ),
         GigaIwaki(
-            id="01",
+            id_="01",
             is_active=False,
             connection=Connection("anode", 1),
             pitch=800,
@@ -69,7 +69,7 @@ def test_parse():
             voltage_threshold_dac=15000
         ),
         GigaIwaki(
-            id="13",
+            id_="13",
             is_active=False,
             connection=Connection("cathode", 2),
             pitch=800,
