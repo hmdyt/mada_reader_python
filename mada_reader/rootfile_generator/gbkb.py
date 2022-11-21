@@ -1,13 +1,14 @@
 from copy import copy
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Literal, Optional, Tuple
+import itertools
 
 import numpy as np
 import ROOT as r
-from nptyping import NDArray
-
 from mada_reader.parser import Event, FlushADC, parse_from_mada_file
 from mada_reader.pyroot_lib.util import pyroot_func
+from nptyping import NDArray
 
 
 def draw_waveform_hist2d(events: List[Event]) -> List[r.TH2D]:
@@ -75,6 +76,42 @@ def calc_fadc_peak2peak(fadc: FlushADC) -> Optional[List[float]]:
     return ret
 
 
+@dataclass
+class FlushADCAmplitude:
+    attr: Literal["min", "max"]
+    value: Tuple[float, float, float, float]
+
+
+def calc_fadc_amplitudes(
+    fadc: FlushADC,
+    baseline_correction_range: Tuple[int, int] = (600, 1000)
+) -> Optional[Tuple[FlushADCAmplitude, FlushADCAmplitude]]:
+    """
+    1イベントのFADCのmax, minを4chぶん取得する
+    baselineも引く
+    [ch0_min, ch1_min, ch2_min, ch3_min], [ch0_max, ch1_max, ch2_max, ch3_max]
+    """
+    if len(fadc.ch0) != 1024:
+        return None
+
+    ret_min = [None, None, None, None]
+    ret_max = [None, None, None, None]
+    range_min, range_max = baseline_correction_range
+
+    baselines = [
+        np.array(fadc_ch_i[range_min:range_max]).mean()
+        for fadc_ch_i in fadc
+    ]
+
+    for i, fadc_ch_i in enumerate(fadc):
+        if fadc_ch_i:
+            ret_min[i] = min(fadc_ch_i) - baselines[i]
+            ret_max[i] = max(fadc_ch_i) - baselines[i]
+        else:
+            return None
+    return FlushADCAmplitude("min", ret_min), FlushADCAmplitude("max", ret_max)
+
+
 def get_fadc_peak2peak_from_mada_file(target_mada_path: Path) -> NDArray:
     """
     .mada 1ファイル分の p2p を np.array で取得する 
@@ -85,3 +122,39 @@ def get_fadc_peak2peak_from_mada_file(target_mada_path: Path) -> NDArray:
     ret = list(map(calc_fadc_peak2peak, fadc_list))
     ret = list(filter(lambda x: x != None, ret))
     return np.array(ret)
+
+
+def get_fadc_amplitude_from_mada_file(target_mada_path: Path) -> Tuple[List[FlushADCAmplitude], List[FlushADCAmplitude]]:
+    """
+    .mada 1ファイル分の amplitude を取得する 
+    [min_ampのリスト], [max_ampのリスト]
+    """
+    events = parse_from_mada_file(target_mada_path)
+    ret_amp_mins: List[FlushADCAmplitude] = []
+    ret_amp_maxs: List[FlushADCAmplitude] = []
+    for event in events:
+        ret_calc_fadc_amplitudes = calc_fadc_amplitudes(event.fadc, (600, 1000))
+        if ret_calc_fadc_amplitudes != None:
+            actual_calc_fadc_amplitudes: Tuple[FlushADCAmplitude, FlushADCAmplitude] = ret_calc_fadc_amplitudes
+            amp_min, amp_max = actual_calc_fadc_amplitudes
+            ret_amp_mins.append(amp_min)
+            ret_amp_maxs.append(amp_max)
+
+    return ret_amp_mins, ret_amp_maxs
+
+
+def average_flush_adc_amplitudes(input_list: List[List[FlushADCAmplitude]]) -> FlushADCAmplitude:
+    """
+    madaファイルごとにイベントの数だけFlushADCAmplitudeがある
+    それらをflattenした後にaverageするもの
+    """
+    flattend_amps: List[FlushADCAmplitude] = list(itertools.chain.from_iterable(input_list))
+    if len(flattend_amps) == 0:
+        raise ValueError("input is empty")
+    min_or_max = flattend_amps[0].attr
+    n_flattend_amps = len(flattend_amps)
+    accumlates = [0, 0, 0, 0]
+    for amp in flattend_amps:
+        for ch in range(4):
+            accumlates[ch] += amp.value[ch]
+    return FlushADCAmplitude(min_or_max, tuple(map(lambda x: x/n_flattend_amps, accumlates)))

@@ -112,5 +112,44 @@ def detect_peak_to_peak(
             print("{}, {}, {}, {}, {}".format(board_name, ch0, ch1, ch2, ch3))
 
 
+@app.command("detamps")
+def detect_peak_to_peak(
+    dir: Path = Path("."),
+    config_file: Path = typer.Option(Path("MADA_config.json"), "--config", "-c", help="MADA_configへのパス"),
+    period_ini: int = typer.Option(0, "--ini", "-f", help="ファイル番号の最初"),
+    period_fin: int = typer.Option(0, "--fin", "-t", help="ファイル番号の最後"),
+):
+    """
+    [gain測定用]
+    指定したperの全てのFADCから波形のampを算出して, ボードごとに平均する
+    """
+    mada_config = get_mada_config(config_file)
+    mada_files = scan_mada_files_from_path(dir, config_file, period_ini, period_fin)
+    mada_files_group_by_name: Dict[str, List[Path]] = {board_name: [] for board_name in mada_config.available_boards}
+    for mada_file in mada_files:
+        board_name = mada_file.name[:7]
+        mada_files_group_by_name[board_name].append(mada_file)
+
+    results: Dict[str, Tuple[gbkb.FlushADCAmplitude, gbkb.FlushADCAmplitude]] = \
+        {board_name: None for board_name in mada_config.available_boards}
+
+    for board_name, mada_file_list in track(mada_files_group_by_name.items(), description="Processing...", transient=True):
+        amps_min_list, amps_max_list = [], []
+        for mada_file in mada_file_list:
+            amps_min, amps_max = gbkb.get_fadc_amplitude_from_mada_file(mada_file)
+            amps_min_list.append(amps_min)
+            amps_max_list.append(amps_max)
+
+        results[board_name] = (
+            gbkb.average_flush_adc_amplitudes(amps_min_list),
+            gbkb.average_flush_adc_amplitudes(amps_max_list)
+        )
+
+    print("board name, ch0, ch1, ch2, ch3")
+    for board_name, (amp_min, amp_max) in results.items():
+        print("{}, {}, {}, {}, {}".format(board_name, *map(int, amp_min.value)))
+        print("{}, {}, {}, {}, {}".format(board_name, *map(int, amp_max.value)))
+
+
 if __name__ == "__main__":
     app()

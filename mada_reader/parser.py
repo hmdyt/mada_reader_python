@@ -82,7 +82,7 @@ def parse_flush_adc(
             event[0:event_reading_bytes]
         )
     except bitstruct.Error as e:
-        print(e, sys.stderr)
+        print(e, file=sys.stderr)
         return None
 
     for i_iter in range(0, len(fadc_unpacked), 3):
