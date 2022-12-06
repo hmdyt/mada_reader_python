@@ -14,7 +14,7 @@ from mada_reader.parser import parse_events, parse_headers, read_file
 from mada_reader.rootfile_generator import gbkb
 from mada_reader.vis import vis_flush_adc
 
-app = typer.Typer(pretty_exceptions_show_locals=False)
+app = typer.Typer(pretty_exceptions_show_locals=True)
 
 
 @app.command()
@@ -29,13 +29,13 @@ def show(mada_path: Path):
 
 
 @app.command()
-def fadc(mada_path: str, event_id: int):
+def fadc(mada_path: str, event_id: int, im: str = "flush_adc.png"):
     """
     visuallize FADC waveform (single event)
     """
     b = read_file(mada_path)
     events = parse_events(b)
-    vis_flush_adc(events[event_id].fadc)
+    vis_flush_adc(events[event_id].fadc, save_file_name=im)
 
 
 @app.command()

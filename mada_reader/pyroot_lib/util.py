@@ -1,4 +1,5 @@
 from array import array
+from copy import copy
 
 import ROOT as r
 
@@ -20,8 +21,8 @@ def list_to_array(l: list) -> array:
         raise TypeError("unsupported type {t}")
 
 
-@pyroot_func
+# @pyroot_func
 def TPGraph(n: int, x: list, y: list) -> r.TGraph:
     xx = list_to_array(x)
     yy = list_to_array(y)
-    return r.TGraph(n, xx, yy)
+    return copy(r.TGraph(n, xx, yy))
