@@ -1,4 +1,5 @@
 import sys
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -11,10 +12,11 @@ from rich.table import Table
 from mada_reader.files import scan_mada_files_from_path
 from mada_reader.models.mada_config import get_mada_config
 from mada_reader.parser import parse_events, parse_headers, read_file
+from mada_reader.pyroot_lib.clock_hist import clock_hist, save_clock_hist_png
 from mada_reader.rootfile_generator import gbkb
 from mada_reader.vis import vis_flush_adc
 
-app = typer.Typer(pretty_exceptions_show_locals=False)
+app = typer.Typer(pretty_exceptions_show_locals=True)
 
 
 @app.command()
@@ -29,13 +31,13 @@ def show(mada_path: Path):
 
 
 @app.command()
-def fadc(mada_path: str, event_id: int):
+def fadc(mada_path: str, event_id: int, im: str = "flush_adc.png"):
     """
     visuallize FADC waveform (single event)
     """
     b = read_file(mada_path)
     events = parse_events(b)
-    vis_flush_adc(events[event_id].fadc)
+    vis_flush_adc(events[event_id].fadc, save_file_name=im)
 
 
 @app.command()
@@ -149,6 +151,19 @@ def detect_peak_to_peak(
     for board_name, (amp_min, amp_max) in results.items():
         print("{}, {}, {}, {}, {}".format(board_name, *map(int, amp_min.value)))
         print("{}, {}, {}, {}, {}".format(board_name, *map(int, amp_max.value)))
+
+
+@app.command("clock")
+def command_clock_hist(target_rootfile_path: Path, imgcat: bool = False):
+    """
+    mada_reader root で作ったrootファイルを見る
+    clockの分布を出力する
+    """
+    hist = clock_hist(str(target_rootfile_path))
+    save_png_path = target_rootfile_path.parent / Path(f"{target_rootfile_path.stem}_clock.png")
+    save_clock_hist_png(hist, save_png_path)
+    if imgcat:
+        subprocess.run(f"imgcat {save_png_path}", shell=True)
 
 
 if __name__ == "__main__":
