@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import typer
+import rich
 from rich.console import Console
 from rich.progress import track
 from rich.table import Table
@@ -20,14 +21,24 @@ app = typer.Typer(pretty_exceptions_show_locals=True)
 
 
 @app.command()
-def show(mada_path: Path):
+def show(mada_path: Path, clock_diff: bool = False):
     """
     show header info
     """
     b = read_file(mada_path)
     events = parse_headers(b)
-    print_string = "trigger\tclock\tinput2\n" + "\n".join(map(lambda e: e.col(), events))
-    print(print_string)
+    if not clock_diff:
+        print_string = "trigger\tclock\tinput2\n" + "\n".join(map(lambda e: e.col(), events))
+        print(print_string)
+        return
+    print("trigger\tclock\tinput2")
+    print(events[0].col())
+    for i in range(1, len(events)):
+        trigger_counter_diff = events[i].trigger_counter - events[i-1].trigger_counter
+        clock_counter_diff = events[i].clock_counter - events[i-1].clock_counter
+        input_ch2_counter_diff = events[i].input_ch2_counter - events[i-1].input_ch2_counter
+        rich.print(f"[i][red]{trigger_counter_diff}\t{clock_counter_diff}\t{input_ch2_counter_diff}[/red][/i]")
+        print(events[i].col())
 
 
 @app.command()
